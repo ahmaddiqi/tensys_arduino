@@ -98,10 +98,11 @@ void firebaseDataSend(float sistolik, float diastolik, float denyutNadi)
     String content;
     FirebaseJson js;
     String path = "users/" + user_ID;
-    js.set("riwayat//sistolik", sistolik);
-    js.set("diastolik", diastolik);
-    js.set("denyutNadi", denyutNadi);
-    js.set("timestamp", printLocalTime());
+    unsigned long epoch = getTime();
+    js.set(String("riwayat/"+String(epoch)+"/sistolik"), sistolik);
+    js.set(String("riwayat/"+String(epoch)+"/diastolik"), diastolik);
+    js.set(String("riwayat/"+String(epoch)+"/denyutNadi"), denyutNadi);
+    js.set(String("riwayat/"+String(epoch)+"/timestamp"), printLocalTime());
     js.toString(content);
 
     if (Firebase.Firestore.createDocument(&fbdo, FIREBASE_PROJECT_ID, "" /* databaseId can be (default) or empty */, path.c_str(), content.c_str()))
@@ -120,4 +121,15 @@ String printLocalTime()
     }
     String readableDate = String(timeinfo.tm_year + 1900) + "-" + String(timeinfo.tm_mon) + "-" + String(timeinfo.tm_mday) + " " + String(timeinfo.tm_hour) + ":" + String(timeinfo.tm_min) + " " + String(timeinfo.tm_sec);
     return readableDate;
+}
+
+unsigned long getTime() {
+  time_t now;
+  struct tm timeinfo;
+  if (!getLocalTime(&timeinfo)) {
+    //Serial.println("Failed to obtain time");
+    return(0);
+  }
+  time(&now);
+  return now;
 }
