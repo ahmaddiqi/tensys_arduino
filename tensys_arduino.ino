@@ -12,7 +12,7 @@ cari di library manager,
 #include <Firebase_ESP_Client.h>
 #include "time.h"
 const char *ntpServer = "pool.ntp.org";
-const long gmtOffset_sec = (1 * 60 * 60);
+const long gmtOffset_sec = (7 * 60 * 60);
 const int daylightOffset_sec = 0;
 //Provide the token generation process info.
 #include "addons/TokenHelper.h"
@@ -97,14 +97,13 @@ void firebaseDataSend(float sistolik, float diastolik, float denyutNadi)
 {
     String content;
     FirebaseJson js;
-    String path = "users/" + user_ID;
     unsigned long epoch = getTime();
-    js.set(String("riwayat/"+String(epoch)+"/sistolik"), sistolik);
-    js.set(String("riwayat/"+String(epoch)+"/diastolik"), diastolik);
-    js.set(String("riwayat/"+String(epoch)+"/denyutNadi"), denyutNadi);
-    js.set(String("riwayat/"+String(epoch)+"/timestamp"), printLocalTime());
+    String path = "users/" + user_ID +"/riwayat/"+ String(epoch,HEX);
+    js.set("fields/sistolik/doubleValue", sistolik);
+    js.set("fields/diastolik/doubleValue", diastolik);
+    js.set("fields/denyutNadi/doubleValue", denyutNadi);
+    js.set("fields/timestamp/timestampValue", printLocalTime());
     js.toString(content);
-
     if (Firebase.Firestore.createDocument(&fbdo, FIREBASE_PROJECT_ID, "" /* databaseId can be (default) or empty */, path.c_str(), content.c_str()))
         Serial.printf("ok\n%s\n\n", fbdo.payload().c_str());
     else
@@ -119,7 +118,7 @@ String printLocalTime()
         Serial.println("Failed to obtain time");
         return "";
     }
-    String readableDate = String(timeinfo.tm_year + 1900) + "-" + String(timeinfo.tm_mon) + "-" + String(timeinfo.tm_mday) + " " + String(timeinfo.tm_hour) + ":" + String(timeinfo.tm_min) + " " + String(timeinfo.tm_sec);
+    String readableDate = String(timeinfo.tm_year + 1900) + "-" + String(timeinfo.tm_mon) + "-" + String(timeinfo.tm_mday) + "T" + String(timeinfo.tm_hour) + ":" + String(timeinfo.tm_min) + ":" + String(timeinfo.tm_sec)+String("+07:00");
     return readableDate;
 }
 
