@@ -60,14 +60,17 @@ void setup()
     Firebasebegin();
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 }
-
+bool done = false;
 void loop()
 {
     // contoh dari nilai sensor
+    if(!done){
     float sistolik = 100;
     float diastolik = 90;
     float denyutNadi = 120;
-    firebaseDataSend(sistolik, diastolik, denyutNadi);
+    done = firebaseDataSend(sistolik, diastolik, denyutNadi);
+    }
+    
 }
 
 void Firebasebegin()
@@ -93,7 +96,7 @@ void Firebasebegin()
     }
 }
 
-void firebaseDataSend(float sistolik, float diastolik, float denyutNadi)
+bool firebaseDataSend(float sistolik, float diastolik, float denyutNadi)
 {
     String content;
     FirebaseJson js;
@@ -104,10 +107,16 @@ void firebaseDataSend(float sistolik, float diastolik, float denyutNadi)
     js.set("fields/denyutNadi/doubleValue", denyutNadi);
     js.set("fields/timestamp/timestampValue", printLocalTime());
     js.toString(content);
-    if (Firebase.Firestore.createDocument(&fbdo, FIREBASE_PROJECT_ID, "" /* databaseId can be (default) or empty */, path.c_str(), content.c_str()))
-        Serial.printf("ok\n%s\n\n", fbdo.payload().c_str());
-    else
-        Serial.println(fbdo.errorReason());
+    if (Firebase.Firestore.createDocument(&fbdo, FIREBASE_PROJECT_ID, "" /* databaseId can be (default) or empty */, path.c_str(), content.c_str())){
+      Serial.printf("ok\n%s\n\n", fbdo.payload().c_str());
+        return true;
+    }
+        
+    else{
+      Serial.println(fbdo.errorReason());
+        return false;
+    }
+        
 }
 
 String printLocalTime()
@@ -118,7 +127,7 @@ String printLocalTime()
         Serial.println("Failed to obtain time");
         return "";
     }
-    String readableDate = String(timeinfo.tm_year + 1900) + "-" + String(timeinfo.tm_mon) + "-" + String(timeinfo.tm_mday) + "T" + String(timeinfo.tm_hour) + ":" + String(timeinfo.tm_min) + ":" + String(timeinfo.tm_sec)+String("+07:00");
+    String readableDate = String(timeinfo.tm_year + 1900) + "-" + String(timeinfo.tm_mon+1) + "-" + String(timeinfo.tm_mday) + "T" + String(timeinfo.tm_hour) + ":" + String(timeinfo.tm_min) + ":" + String(timeinfo.tm_sec)+String("+07:00");
     return readableDate;
 }
 
